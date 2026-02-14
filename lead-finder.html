@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safe Lead Finder - Web Development</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .safety-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .chat-section {
+            padding: 30px;
+            border-right: 1px solid #e5e7eb;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+
+        .bot-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            margin-right: 15px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 500px;
+            padding-right: 10px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.bot {
+            text-align: left;
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message-content {
+            display: inline-block;
+            padding: 12px 18px;
+            border-radius: 18px;
+            max-width: 80%;
+            line-height: 1.5;
+        }
+
+        .message.bot .message-content {
+            background: #f3f4f6;
+            color: #1f2937;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            padding-left: 10px;
+        }
+
+        .quick-reply {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+
+        .quick-reply:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .input-area {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .input-area input:focus {
+            border-color: #667eea;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .results-section {
+            padding: 30px;
+            background: #f9fafb;
+            overflow-y: auto;
+            max-height: 700px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-header h2 {
+            color: #1f2937;
+            font-size: 1.5em;
+        }
+
+        .export-btn {
+            background: #10b981;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .export-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .lead-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s;
+        }
+
+        .lead-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .lead-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 10px;
+        }
+
+        .lead-name {
+            font-weight: bold;
+            color: #1f2937;
+            font-size: 1.1em;
+        }
+
+        .lead-title {
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-top: 2px;
+        }
+
+        .lead-company {
+            color: #667eea;
+            font-weight: 600;
+            font-size: 0.95em;
+            margin-top: 5px;
+        }
+
+        .lead-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #6b7280;
+        }
+
+        .lead-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .status-new { background: #dbeafe; color: #1e40af; }
+        .status-contacted { background: #fef3c7; color: #92400e; }
+        .status-responded { background: #d1fae5; color: #065f46; }
+
+        .search-string-box {
+            background: #1f2937;
+            color: #10b981;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin: 15px 0;
+            position: relative;
+            overflow-x: auto;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #374151;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+        }
+
+        .copy-btn:hover {
+            background: #4b5563;
+        }
+
+        .template-box {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            position: relative;
+        }
+
+        .template-title {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+
+        .template-text {
+            color: #4b5563;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stat-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #6b7280;
+            margin-top: 5px;
+        }
+
+        .safety-notice {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #92400e;
+        }
+
+        .safety-notice strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            .chat-section {
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Safe Lead Finder</h1>
+            <p>Web Development Lead Generation System</p>
+            <div class="safety-badge">✓ 100% LinkedIn Safe • No Automation</div>
+        </div>
+
+        <div class="main-content">
+            <div class="chat-section">
+                <div class="chat-header">
+                    <div class="bot-avatar">🤖</div>
+                    <div>
+                        <div style="font-weight: bold; color: #1f2937;">LeadBot</div>
+                        <div style="font-size: 0.85em; color: #6b7280;">Your Web Dev Lead Assistant</div>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message bot">
+                        <div class="message-content">
+                            Hi! I'm your Safe Lead Finder. I'll help you find web development clients on LinkedIn without risking your account.<br><br>
+                            <strong>How it works:</strong><br>
+                            1. I help you build targeted search filters<br>
+                            2. You manually search on LinkedIn<br>
+                            3. You export leads to your spreadsheet<br>
+                            4. You connect manually (safe!)<br><br>
+                            What type of web development services do you offer?
+                        </div>
+                    </div>
+                    <div class="quick-replies" id="initialReplies">
+                        <button class="quick-reply" onclick="selectService('Custom Websites')">Custom Websites</button>
+                        <button class="quick-reply" onclick="selectService('E-commerce')">E-commerce</button>
+                        <button class="quick-reply" onclick="selectService('Web Apps')">Web Apps</button>
+                        <button class="quick-reply" onclick="selectService('WordPress')">WordPress</button>
+                        <button class="quick-reply" onclick="selectService('Shopify')">Shopify</button>
+                        <button class="quick-reply" onclick="selectService('Full Stack')">Full Stack</button>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <input type="text" id="userInput" placeholder="Type your message..." onkeypress="handleKeyPress(event)">
+                    <button class="send-btn" onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+
+            <div class="results-section">
+                <div class="safety-notice">
+                    <strong>⚠️ Safety Reminder</strong>
+                    This tool generates search strategies only. Always manually connect and message on LinkedIn to avoid account restrictions.
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="leadCount">0</div>
+                        <div class="stat-label">Leads Found</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="searchCount">0</div>
+                        <div class="stat-label">Searches</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="templateCount">3</div>
+                        <div class="stat-label">Templates</div>
+                    </div>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar" style="width: 10%"></div>
+                </div>
+
+                <div id="resultsContent">
+                    <div style="text-align: center; color: #9ca3af; padding: 40px;">
+                        <div style="font-size: 3em; margin-bottom: 15px;">📋</div>
+                        <p>Your leads and search strategies will appear here</p>
+                        <p style="font-size: 0.9em; margin-top: 10px;">Start by selecting your service type</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        let currentState = {
+            step: 'service',
+            service: '',
+            targetIndustry: '',
+            companySize: '',
+            location: '',
+            leads: [],
+            searchStrings: []
+        };
+
+        // Lead database simulation
+        const sampleLeads = {
+            'Custom Websites': [
+                { name: 'Sarah Johnson', title: 'Marketing Director', company: 'GrowthLabs Inc', location: 'San Francisco, CA', industry: 'SaaS', size: '50-200' },
+                { name: 'Michael Chen', title: 'CEO', company: 'StartupVentures', location: 'New York, NY', industry: 'Technology', size: '11-50' },
+                { name: 'Emily Davis', title: 'Head of Digital', company: 'RetailMax', location: 'Chicago, IL', industry: 'Retail', size: '200-500' }
+            ],
+            'E-commerce': [
+                { name: 'David Park', title: 'E-commerce Manager', company: 'FashionForward', location: 'Los Angeles, CA', industry: 'Fashion', size: '50-200' },
+                { name: 'Lisa Wong', title: 'CTO', company: 'ShopEase', location: 'Miami, FL', industry: 'E-commerce', size: '11-50' },
+                { name: 'James Miller', title: 'Digital Director', company: 'HomeGoods Co', location: 'Austin, TX', industry: 'Retail', size: '200-500' }
+            ],
+            'Web Apps': [
+                { name: 'Alex Rivera', title: 'Product Manager', company: 'TechFlow', location: 'Seattle, WA', industry: 'Software', size: '50-200' },
+                { name: 'Rachel Green', title: 'VP Engineering', company: 'CloudBase', location: 'Boston, MA', industry: 'Technology', size: '200-500' },
+                { name: 'Tom Wilson', title: 'Founder', company: 'AppWorks', location: 'Denver, CO', industry: 'Startups', size: '11-50' }
+            ],
+            'WordPress': [
+                { name: 'Nina Patel', title: 'Content Manager', company: 'MediaGroup', location: 'Portland, OR', industry: 'Publishing', size: '50-200' },
+                { name: 'Chris Brown', title: 'Marketing Lead', company: 'ConsultPro', location: 'Atlanta, GA', industry: 'Consulting', size: '11-50' },
+                { name: 'Amanda Lee', title: 'Creative Director', company: 'DesignHub', location: 'San Diego, CA', industry: 'Design', size: '11-50' }
+            ],
+            'Shopify': [
+                { name: 'Jordan Smith', title: 'Store Owner', company: 'OrganicGoods', location: 'Nashville, TN', industry: 'Food & Beverage', size: '11-50' },
+                { name: 'Taylor Reed', title: 'Operations Manager', company: 'FitGear', location: 'Phoenix, AZ', industry: 'Fitness', size: '50-200' },
+                { name: 'Morgan Blake', title: 'Brand Manager', company: 'LuxeBeauty', location: 'Dallas, TX', industry: 'Cosmetics', size: '11-50' }
+            ],
+            'Full Stack': [
+                { name: 'Casey Kim', title: 'Technical Lead', company: 'InnovateTech', location: 'San Jose, CA', industry: 'Technology', size: '200-500' },
+                { name: 'Drew Martinez', title: 'IT Director', company: 'FinanceHub', location: 'New York, NY', industry: 'Finance', size: '500+' },
+                { name: 'Quinn Taylor', title: 'Founder & CTO', company: 'DataDrive', location: 'Chicago, IL', industry: 'Data Analytics', size: '11-50' }
+            ]
+        };
+
+        // Message handling
+        function addMessage(content, isUser = false) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'bot'} fade-in`;
+            messageDiv.innerHTML = `<div class="message-content">${content}</div>`;
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function addQuickReplies(options, callback) {
+            const chatMessages = document.getElementById('chatMessages');
+            const repliesDiv = document.createElement('div');
+            repliesDiv.className = 'quick-replies';
+            repliesDiv.id = 'currentReplies';
+            
+            options.forEach(option => {
+                const btn = document.createElement('button');
+                btn.className = 'quick-reply';
+                btn.textContent = option;
+                btn.onclick = () => {
+                    callback(option);
+                    document.getElementById('currentReplies')?.remove();
+                };
+                repliesDiv.appendChild(btn);
+            });
+            
+            chatMessages.appendChild(repliesDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Service selection
+        function selectService(service) {
+            currentState.service = service;
+            addMessage(service, true);
+            
+            setTimeout(() => {
+                addMessage(`Great! You specialize in <strong>${service}</strong>. Now let's find your ideal clients.<br><br>Which industry would you like to target?`);
+                addQuickReplies(['SaaS/Technology', 'E-commerce/Retail', 'Healthcare', 'Finance', 'Real Estate', 'Professional Services', 'Any Industry'], selectIndustry);
+                updateProgress(25);
+            }, 500);
+        }
+
+        function selectIndustry(industry) {
+            currentState.targetIndustry = industry;
+            addMessage(industry, true);
+            
+            setTimeout(() => {
+                addMessage(`Perfect! Targeting <strong>${industry}</strong> companies.<br><br>What company size is your sweet spot?`);
+                addQuickReplies(['Startups (1-10)', 'Small (11-50)', 'Mid-size (51-200)', 'Large (201-500)', 'Enterprise (500+)'], selectCompanySize);
+                updateProgress(50);
+            }, 500);
+        }
+
+        function selectCompanySize(size) {
+            currentState.companySize = size;
+            addMessage(size, true);
+            
+            setTimeout(() => {
+                addMessage(`Excellent! Now, which location are you targeting?`);
+                addQuickReplies(['United States', 'Canada', 'United Kingdom', 'Europe', 'Remote/Global', 'Specific City'], selectLocation);
+                updateProgress(75);
+            }, 500);
+        }
+
+        function selectLocation(location) {
+            currentState.location = location;
+            addMessage(location, true);
+            
+            setTimeout(() => {
+                generateResults();
+                addMessage(`🎉 <strong>Your lead generation strategy is ready!</strong><br><br>I've created customized LinkedIn search strings and found sample leads matching your criteria.<br><br>Check the right panel for:<br>• Boolean search strings<br>• Sample leads<br>• Connection templates<br><br>Remember: Copy these searches to LinkedIn manually and connect with leads one by one for safety!`);
+                updateProgress(100);
+            }, 800);
+        }
+
+        function generateResults() {
+            const resultsContent = document.getElementById('resultsContent');
+            const service = currentState.service;
+            const industry = currentState.targetIndustry;
+            
+            // Generate Boolean search strings
+            const searchStrings = generateBooleanStrings(service, industry);
+            
+            // Get sample leads
+            const leads = sampleLeads[service] || sampleLeads['Custom Websites'];
+            
+            // Update stats
+            document.getElementById('leadCount').textContent = leads.length;
+            document.getElementById('searchCount').textContent = searchStrings.length;
+            
+            // Build results HTML
+            let html = `
+                <div class="results-header">
+                    <h2>🎯 Your Lead Strategy</h2>
+                    <button class="export-btn" onclick="exportToCSV()">
+                        <span>📥</span> Export Leads
+                    </button>
+                </div>
+                
+                <div style="margin-bottom: 25px;">
+                    <h3 style="color: #374151; margin-bottom: 10px; font-size: 1.1em;">LinkedIn Boolean Search Strings</h3>
+                    <p style="color: #6b7280; font-size: 0.9em; margin-bottom: 15px;">Copy these and paste into LinkedIn Sales Navigator search bar:</p>
+            `;
+            
+            searchStrings.forEach((str, idx) => {
+                html += `
+                    <div class="search-string-box">
+                        <button class="copy-btn" onclick="copyToClipboard('${str.replace(/'/g, "\\'")}')">Copy</button>
+                        <div id="search-${idx}">${str}</div>
+                    </div>
+                `;
+            });
+            
+            html += `</div><div style="margin-bottom: 25px;">
+                <h3 style="color: #374151; margin-bottom: 15px; font-size: 1.1em;">Sample Target Leads</h3>
+            `;
+            
+            leads.forEach((lead, idx) => {
+                html += `
+                    <div class="lead-card">
+                        <div class="lead-header">
+                            <div>
+                                <div class="lead-name">${lead.name}</div>
+                                <div class="lead-title">${lead.title}</div>
+                                <div class="lead-company">${lead.company}</div>
+                            </div>
+                        </div>
+                        <div class="lead-meta">
+                            <span>📍 ${lead.location}</span>
+                            <span>🏢 ${lead.industry}</span>
+                            <span>👥 ${lead.size} employees</span>
+                        </div>
+                        <span class="status-badge status-new">New Lead</span>
+                    </div>
+                `;
+            });
+            
+            html += `</div><div>
+                <h3 style="color: #374151; margin-bottom: 15px; font-size: 1.1em;">Connection Request Templates</h3>
+                
+                <div class="template-box">
+                    <div class="template-title">Template 1: Value-First Approach</div>
+                    <div class="template-text">
+                        Hi [Name],<br><br>
+                        I came across your profile and noticed you're working on interesting projects at ${leads[0].company}. I specialize in helping ${industry} companies with ${service} solutions that typically improve conversion rates by 30%.<br><br>
+                        Would love to connect and share some insights about optimizing your digital presence.<br><br>
+                        Best,<br>
+                        [Your Name]
+                    </div>
+                </div>
+                
+                <div class="template-box">
+                    <div class="template-title">Template 2: Mutual Interest</div>
+                    <div class="template-text">
+                        Hi [Name],<br><br>
+                        I see you're leading digital initiatives at ${leads[0].company}. I'm a ${service} developer focused on the ${industry} space and would love to connect with fellow professionals in this industry.<br><br>
+                        Always happy to exchange ideas about web strategy!<br><br>
+                        Cheers,<br>
+                        [Your Name]
+                    </div>
+                </div>
+                
+                <div class="template-box">
+                    <div class="template-title">Template 3: Recent Activity Reference</div>
+                    <div class="template-text">
+                        Hi [Name],<br><br>
+                        I noticed your recent post about [topic] and found your perspective really valuable. I'm working on similar challenges with ${service} projects in the ${industry} sector.<br><br>
+                        Would be great to connect and continue the conversation!<br><br>
+                        Regards,<br>
+                        [Your Name]
+                    </div>
+                </div>
+            </div>
+            
+            <div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 8px; margin-top: 20px; font-size: 0.9em; color: #1e40af;">
+                <strong>💡 Pro Tip:</strong> Personalize each message by referencing specific details from their profile or recent posts. This increases response rates by 3x!
+            </div>`;
+            
+            resultsContent.innerHTML = html;
+            currentState.leads = leads;
+            currentState.searchStrings = searchStrings;
+        }
+
+        function generateBooleanStrings(service, industry) {
+            const strings = [];
+            
+            // Base job titles for web development buyers
+            const titles = '("Marketing Director" OR "CMO" OR "CEO" OR "Founder" OR "Head of Digital" OR "Product Manager" OR "CTO")';
+            
+            // Service keywords
+            const serviceKeywords = {
+                'Custom Websites': '("website redesign" OR "new website" OR "web development")',
+                'E-commerce': '("e-commerce" OR "online store" OR "shopify" OR "woocommerce")',
+                'Web Apps': '("web application" OR "saas platform" OR "custom software")',
+                'WordPress': '("wordpress" OR "cms" OR "content management")',
+                'Shopify': '("shopify" OR "ecommerce platform" OR "online retail")',
+                'Full Stack': '("full stack" OR "web development" OR "digital transformation")'
+            };
+            
+            // Industry keywords
+            const industryKeywords = {
+                'SaaS/Technology': '("saas" OR "software" OR "technology")',
+                'E-commerce/Retail': '("ecommerce" OR "retail" OR "online store")',
+                'Healthcare': '("healthcare" OR "medical" OR "health tech")',
+                'Finance': '("fintech" OR "finance" OR "financial services")',
+                'Real Estate': '("real estate" OR "property" OR "proptech")',
+                'Professional Services': '("consulting" OR "agency" OR "services")',
+                'Any Industry': '("growth" OR "scaling" OR "digital")'
+            };
+            
+            const serviceStr = serviceKeywords[service] || serviceKeywords['Custom Websites'];
+            const industryStr = industryKeywords[industry] || industryKeywords['Any Industry'];
+            
+            strings.push(`${titles} AND ${serviceStr} AND ${industryStr}`);
+            strings.push(`${titles} AND ${serviceStr} AND ("hiring" OR "growing" OR "expanding")`);
+            strings.push(`("Founder" OR "CEO" OR "Owner") AND ${serviceStr} AND ${industryStr} AND ("startup" OR "small business")`);
+            
+            return strings;
+        }
+
+        function updateProgress(percent) {
+            document.getElementById('progressBar').style.width = percent + '%';
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Search string copied! Paste this into LinkedIn Sales Navigator.');
+            });
+        }
+
+        function exportToCSV() {
+            if (currentState.leads.length === 0) {
+                alert('No leads to export yet. Complete the setup first!');
+                return;
+            }
+            
+            let csv = 'Name,Title,Company,Location,Industry,Company Size,Status\n';
+            currentState.leads.forEach(lead => {
+                csv += `${lead.name},${lead.title},${lead.company},${lead.location},${lead.industry},${lead.size},New\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `web-dev-leads-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            alert('Leads exported! Import this into Excel or Google Sheets to track your outreach.');
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            if (message) {
+                addMessage(message, true);
+                input.value = '';
+                // Simple response for manual input
+                setTimeout(() => {
+                    addMessage("Thanks for that info! I'm processing your requirements...<br><br>For best results, please use the quick reply buttons above to help me understand your target market better.");
+                }, 500);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Safe Lead Finder initialized');
+        });
+    </script>
+</body>
+</html>
